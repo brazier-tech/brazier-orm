@@ -1,8 +1,4 @@
-﻿// brazierORM.cpp: определяет точку входа для приложения.
-//
-
-#include <string>
-#include "brazierORM.h"
+﻿#include <string>
 #include <brazier/log/Logger.hpp>
 #include "include/Database.hpp"
 

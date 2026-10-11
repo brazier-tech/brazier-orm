@@ -75,9 +75,8 @@ install(TARGETS brazier_orm
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-install(FILES brazierORM.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/brazier/orm)
-
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/brazier/orm)
+install(FILES orm.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/brazier)
 
 install(EXPORT brazier-ormTargets
     NAMESPACE brazier::
