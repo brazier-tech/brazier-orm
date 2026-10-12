@@ -47,7 +47,7 @@ namespace brazier {
 
         std::string query(const std::string& sql);
 
-        std::map<std::string, std::string> queryMap(const std::string& sql_template, const std::vector<std::string>& params);
+        std::map<std::string, std::string> queryMap(const std::string& sql_template, const std::vector<std::string>& params = {});
         std::vector<std::map<std::string, std::string>> queryToVector(const std::string& sql_template, const std::vector<std::string>& params = {});
 
         PGconn* getConnection() const { return conn_; }
