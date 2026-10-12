@@ -39,7 +39,7 @@ SQLSchemaBuilder& SQLSchemaBuilder::AddForeignKey(const std::string& column, con
     return *this;
 }
 
-std::string SQLSchemaBuilder::AddIndex(const std::string& indexName, const std::vector<std::string>& columns) {
+SQLSchemaBuilder& SQLSchemaBuilder::AddIndex(const std::string& indexName, const std::vector<std::string>& columns) {
     std::ostringstream indexColumns;
     for (size_t i = 0; i < columns.size(); ++i) {
         indexColumns << columns[i];
@@ -47,10 +47,11 @@ std::string SQLSchemaBuilder::AddIndex(const std::string& indexName, const std::
             indexColumns << ", ";
         }
     }
-    return "CREATE INDEX " + indexName + " ON " + table + " (" + indexColumns.str() + ");";
+    indexes.push_back("CREATE INDEX " + indexName + " ON " + table + " (" + indexColumns.str() + ");");
+    return *this;
 }
 
-std::string SQLSchemaBuilder::AddUniqueConstraint(const std::string& constraintName, const std::vector<std::string>& columns) {
+SQLSchemaBuilder& SQLSchemaBuilder::AddUniqueConstraint(const std::string& constraintName, const std::vector<std::string>& columns) {
     std::ostringstream uniqueColumns;
     for (size_t i = 0; i < columns.size(); ++i) {
         uniqueColumns << columns[i];
@@ -58,7 +59,9 @@ std::string SQLSchemaBuilder::AddUniqueConstraint(const std::string& constraintN
             uniqueColumns << ", ";
         }
     }
-    return "ALTER TABLE " + table + " ADD CONSTRAINT " + constraintName + " UNIQUE (" + uniqueColumns.str() + ");";
+    uniqueConstraints.push_back("ALTER TABLE " + table + " ADD CONSTRAINT " + constraintName + " UNIQUE (" + uniqueColumns.str() + ");");
+
+    return *this;
 }
 
 SQLSchemaBuilder& SQLSchemaBuilder::DropColumn(const std::string& column) {
@@ -105,6 +108,9 @@ std::string SQLSchemaBuilder::CreateTable() {
     }
 
     query << ");";
+
+    for (std::string s : indexes) query << s;
+    for (std::string s : uniqueConstraints) query << s;
 
     return query.str();
 }

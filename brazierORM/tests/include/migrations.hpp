@@ -36,11 +36,10 @@ public:
 			.AddColumn("id_test serial primary key")
 			.AddColumn("name varchar(255)")
 			.AddColumn("email varchar(255)")
+			.AddIndex("idx_name", { "name" })
+			.AddUniqueConstraint("uq_email", { "email" })
 			.CreateTable()
 		);
-
-		queries.push_back(builder.AddUniqueConstraint("uq_email", { "email" }));
-		queries.push_back(builder.AddIndex("idx_name", { "name" }));
 
 		return queries;
 	}
