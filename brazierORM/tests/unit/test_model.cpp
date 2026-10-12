@@ -213,3 +213,19 @@ TEST_F(TestModelCase, SaveWithSpecialCharacters) {
 		FAIL() << e.what();
 	}
 }
+
+TEST_F(TestModelCase, SaveUUIdUser) {
+	try {
+		manager->migrate<CreateTestUserTable>();
+		std::shared_ptr<TestUserModel> model = TestUserModel::create({ {"test", "test"}, {"description", "description"} }, 0, db_ptr);
+		bool res = model->save();
+		EXPECT_EQ(res, true);
+
+		auto id = model->getAttribute("id_user");	
+		std::shared_ptr<TestUserModel> model2 = TestUserModel::find(id, db_ptr);
+		EXPECT_NE(model2, nullptr);
+	}
+	catch (std::exception& e) {
+		FAIL() << e.what();
+	}
+}

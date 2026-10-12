@@ -196,7 +196,7 @@ namespace brazier {
 
         static std::shared_ptr<Derived> find(std::string id, const std::shared_ptr<Database>& db) {
             try {
-                auto results = query().Where(Derived::primary_key + " = " + id).Limit(1).get(db);
+                auto results = query().Where(Derived::primary_key + " = '" + id + "'").Limit(1).get(db);
                 if (results.empty()) {
                     Logger::log("No data found by id", "WARNING");
                     return nullptr;
@@ -277,7 +277,7 @@ namespace brazier {
                     return;
                 }
                 SQLQueryBuilder builder(Derived::table_name);
-                builder.Delete().Where("id = " + SQLString::EscapeString(conn, id));
+                builder.Delete().Where(Derived::primary_key + " = " + SQLString::EscapeString(conn, id));
                 std::string query = builder.get();
                 db->execute(query);
             }
