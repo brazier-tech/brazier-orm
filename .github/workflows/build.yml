@@ -29,6 +29,7 @@ jobs:
     env:
       VCPKG_OVERLAY_PORTS: ${{ github.workspace }}/registry/ports
       BRAZIER_LOGGER_REF:  ${{ needs.resolve.outputs.logger_ref }}
+      VCPKG_KEEP_ENV_VARS: "BRAZIER_LOGGER_REF"
 
     strategy:
       fail-fast: false
@@ -46,14 +47,21 @@ jobs:
 
     steps:
     - name: Checkout brazier-orm
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Checkout brazier-registry
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: brazier-tech/brazier-registry
         path: registry
         ref: for-local-using
+
+    - name: Debug env
+      shell: bash
+      run: |
+        echo "BRAZIER_LOGGER_REF = $BRAZIER_LOGGER_REF"
+        echo "VCPKG_OVERLAY_PORTS = $VCPKG_OVERLAY_PORTS"
+        echo "VCPKG_KEEP_ENV_VARS = $VCPKG_KEEP_ENV_VARS"
 
     - name: Start PostgreSQL
       run: |
@@ -70,11 +78,27 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgJsonGlob: 'brazierORM/vcpkg.json'
+        vcpkgJsonGlob: 'vcpkg.json'
 
     - name: Set VCPKG_ROOT
       shell: bash
       run: echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
+
+    - name: Create tests config
+      working-directory: brazierORM
+      run: |
+        mkdir -p tests/config
+        cat > tests/config/config.hpp <<'EOF'
+        #pragma once
+        #include <string>
+
+        static const std::string db_host     = "localhost";
+        static const std::string db_port     = "5432";
+        static const std::string db_user     = "postgres";
+        static const std::string db_password = "postgres";
+        static const std::string db_name     = "postgres";
+        EOF
+      shell: bash
 
     - name: Configure CMake
       run: >
@@ -85,6 +109,8 @@ jobs:
         -DBUILD_SHARED_LIBS=${{ matrix.shared_libs }}
         -DBUILD_TESTS=ON
         -DBUILD_DEMO=OFF
+        -DVCPKG_MANIFEST_DIR=${{ github.workspace }}
+        -DVCPKG_INSTALLED_DIR=${{ github.workspace }}/vcpkg_installed
         -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/registry/ports
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
         -S brazierORM
@@ -104,6 +130,7 @@ jobs:
     env:
       VCPKG_OVERLAY_PORTS: ${{ github.workspace }}/registry/ports
       BRAZIER_LOGGER_REF:  ${{ needs.resolve.outputs.logger_ref }}
+      VCPKG_KEEP_ENV_VARS: "BRAZIER_LOGGER_REF"
 
     strategy:
       fail-fast: false
@@ -118,30 +145,32 @@ jobs:
 
     steps:
     - name: Checkout brazier-orm
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Checkout brazier-registry
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: brazier-tech/brazier-registry
         path: registry
         ref: for-local-using
 
+    - name: Debug env
+      shell: bash
+      run: |
+        echo "BRAZIER_LOGGER_REF = $BRAZIER_LOGGER_REF"
+        echo "VCPKG_OVERLAY_PORTS = $VCPKG_OVERLAY_PORTS"
+        echo "VCPKG_KEEP_ENV_VARS = $VCPKG_KEEP_ENV_VARS"
+
     - name: Install PostgreSQL
       shell: pwsh
       run: |
         choco install postgresql15 --params '/Password:postgres' --no-progress -y
-        $svc = Get-Service -Name "postgresql*"
-        if ($svc) { Start-Service $svc.Name }
-        # update pg_hba.conf to trust local connections
+        $svc = Get-Service -Name "postgresql*" | Select-Object -First 1
+        Start-Service $svc.Name
         $data = "C:\Program Files\PostgreSQL\15\data"
         $hba = Join-Path $data "pg_hba.conf"
-        if (Test-Path $hba) {
-          (Get-Content $hba) -replace 'scram-sha-256','trust' -replace 'md5','trust' |
-              Set-Content $hba
-          Restart-Service $svc.Name
-        }
-        # set postgres user password
+        (Get-Content $hba) -replace 'scram-sha-256','trust' -replace 'md5','trust' | Set-Content $hba
+        Restart-Service $svc.Name
         $env:PGPASSWORD = "postgres"
         & "C:\Program Files\PostgreSQL\15\bin\psql.exe" -U postgres -c "ALTER USER postgres PASSWORD 'postgres';"
 
@@ -149,11 +178,27 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgJsonGlob: 'brazierORM/vcpkg.json'
+        vcpkgJsonGlob: 'vcpkg.json'
 
     - name: Set VCPKG_ROOT
       shell: bash
       run: echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
+
+    - name: Create tests config
+      working-directory: brazierORM
+      run: |
+        New-Item -ItemType Directory -Force -Path "tests\config" | Out-Null
+        @'
+        #pragma once
+        #include <string>
+
+        static const std::string db_host     = "localhost";
+        static const std::string db_port     = "5432";
+        static const std::string db_user     = "postgres";
+        static const std::string db_password = "postgres";
+        static const std::string db_name     = "postgres";
+        '@ | Out-File -Encoding utf8 tests\config\config.hpp
+      shell: pwsh
 
     - name: Configure CMake
       run: >
@@ -164,6 +209,8 @@ jobs:
         -DBUILD_SHARED_LIBS=${{ matrix.shared_libs }}
         -DBUILD_TESTS=ON
         -DBUILD_DEMO=OFF
+        -DVCPKG_MANIFEST_DIR=${{ github.workspace }}
+        -DVCPKG_INSTALLED_DIR=${{ github.workspace }}/vcpkg_installed
         -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/registry/ports
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
         -S brazierORM
@@ -177,9 +224,9 @@ jobs:
         $dest = "build\${{ matrix.build_type }}"
         New-Item -ItemType Directory -Force -Path $dest | Out-Null
         if ("${{ matrix.build_type }}" -eq "Release") {
-          Copy-Item "build\vcpkg_installed\x64-windows\bin\*.dll" -Destination $dest -ErrorAction SilentlyContinue
+          Copy-Item "vcpkg_installed\x64-windows\bin\*.dll" -Destination $dest -ErrorAction SilentlyContinue
         } else {
-          Copy-Item "build\vcpkg_installed\x64-windows\debug\bin\*.dll" -Destination $dest -ErrorAction SilentlyContinue
+          Copy-Item "vcpkg_installed\x64-windows\debug\bin\*.dll" -Destination $dest -ErrorAction SilentlyContinue
         }
 
     - name: Run tests
@@ -189,11 +236,12 @@ jobs:
 
   macos:
     needs: resolve
-    runs-on: macos-13
+    runs-on: macos-latest
 
     env:
       VCPKG_OVERLAY_PORTS: ${{ github.workspace }}/registry/ports
       BRAZIER_LOGGER_REF:  ${{ needs.resolve.outputs.logger_ref }}
+      VCPKG_KEEP_ENV_VARS: "BRAZIER_LOGGER_REF"
 
     strategy:
       fail-fast: false
@@ -208,24 +256,29 @@ jobs:
 
     steps:
     - name: Checkout brazier-orm
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Checkout brazier-registry
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: brazier-tech/brazier-registry
         path: registry
         ref: for-local-using
+
+    - name: Debug env
+      shell: bash
+      run: |
+        echo "BRAZIER_LOGGER_REF = $BRAZIER_LOGGER_REF"
+        echo "VCPKG_OVERLAY_PORTS = $VCPKG_OVERLAY_PORTS"
+        echo "VCPKG_KEEP_ENV_VARS = $VCPKG_KEEP_ENV_VARS"
 
     - name: Install system dependencies
       run: |
         brew install autoconf postgresql@15
         brew services start postgresql@15
         sleep 5
-        # ensure 'postgres' superuser exists (homebrew creates current user by default)
         createuser -s postgres 2>/dev/null || true
         psql -U postgres -d postgres -c "ALTER USER postgres PASSWORD 'postgres';" || true
-        # set to trust for local connections
         PG_HBA=$(brew --prefix)/var/postgresql@15/pg_hba.conf
         if [ -f "$PG_HBA" ]; then
           sed -i.bak 's/scram-sha-256/trust/g; s/md5/trust/g' "$PG_HBA"
@@ -237,11 +290,27 @@ jobs:
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgJsonGlob: 'brazierORM/vcpkg.json'
+        vcpkgJsonGlob: 'vcpkg.json'
 
     - name: Set VCPKG_ROOT
       shell: bash
       run: echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
+
+    - name: Create tests config
+      working-directory: brazierORM
+      run: |
+        mkdir -p tests/config
+        cat > tests/config/config.hpp <<'EOF'
+        #pragma once
+        #include <string>
+
+        static const std::string db_host     = "localhost";
+        static const std::string db_port     = "5432";
+        static const std::string db_user     = "postgres";
+        static const std::string db_password = "postgres";
+        static const std::string db_name     = "postgres";
+        EOF
+      shell: bash
 
     - name: Configure CMake
       run: >
@@ -252,6 +321,8 @@ jobs:
         -DBUILD_SHARED_LIBS=${{ matrix.shared_libs }}
         -DBUILD_TESTS=ON
         -DBUILD_DEMO=OFF
+        -DVCPKG_MANIFEST_DIR=${{ github.workspace }}
+        -DVCPKG_INSTALLED_DIR=${{ github.workspace }}/vcpkg_installed
         -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/registry/ports
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
         -S brazierORM
