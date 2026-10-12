@@ -112,3 +112,32 @@ public:
 		return q;
 	}
 };
+
+class CreateTestUserTable : public BaseMigration<CreateTestUserTable> {
+public:
+	static std::vector<std::string> up() {
+		SQLSchemaBuilder builder("test_user_table");
+		std::vector<std::string> queries;
+
+		queries.push_back(builder
+			.AddColumn("id_user UUID primary key default gen_random_uuid()")
+			.AddColumn("test varchar(255)")
+			.AddColumn("description varchar(255)")
+			.CreateTable()
+		);
+
+		return queries;
+	}
+
+	static std::vector<std::string> down() {
+		SQLSchemaBuilder builder("test_user_table");
+		std::vector<std::string> q;
+
+		q.push_back(
+			builder.DropTable()
+		);
+
+		return q;
+	}
+};
+

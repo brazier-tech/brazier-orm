@@ -60,3 +60,16 @@ public:
 	TestModelDB() = default;
 	TestModelDB(const std::shared_ptr<Database>& db) : Model<TestModelDB>(db) {}
 };
+
+class TestUserModel : public Model<TestUserModel> {
+public:
+	static inline std::string table_name = "test_user_table";
+	static inline std::string primary_key = "id_user";
+
+	static inline std::vector<std::string> fillable = { "test", "description" };
+	static inline std::vector<std::string> fields = { "id_user", "test", "description" };
+
+
+	TestUserModel() = default;
+	TestUserModel(const std::shared_ptr<Database>& db) : Model<TestUserModel>(db) {}
+};
