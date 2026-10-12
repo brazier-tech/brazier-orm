@@ -214,9 +214,8 @@ static std::vector<std::string> up() {
         .AddColumn("name", "varchar(255) not null")
         .AddColumn("email", "varchar(255) unique not null")
         .AddColumn("created_at", "timestamp")
+        .AddIndex("idx_email", "email")
         .CreateTable());
-
-    q.push_back(builder.AddIndex("idx_email", "email"));
 
     return q;
 }
