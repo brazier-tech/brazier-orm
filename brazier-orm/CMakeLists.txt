@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.14)
-project(brazier-orm VERSION 0.1.0 LANGUAGES CXX)
+project(brazier-orm VERSION 0.1.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -56,15 +56,15 @@ if(MSVC)
     )
 endif()
 
-option(BUILD_DEMO "Build brazierORM demo executable" ON)
+option(BUILD_DEMO "Build brazier-orm demo executable" ON)
 
 if(BUILD_DEMO)
-    add_executable(brazierORM brazierORM.cpp)
-    target_include_directories(brazierORM PRIVATE
+    add_executable(brazier-orm brazier-orm.cpp)
+    target_include_directories(brazier-orm PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-    target_link_libraries(brazierORM PRIVATE brazier_orm)
+    target_link_libraries(brazier-orm PRIVATE brazier_orm)
 endif()
 
 install(TARGETS brazier_orm
