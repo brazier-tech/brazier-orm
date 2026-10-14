@@ -85,7 +85,7 @@ jobs:
       run: echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
 
     - name: Create tests config
-      working-directory: brazierORM
+      working-directory: brazier-orm
       run: |
         mkdir -p tests/config
         cat > tests/config/config.hpp <<'EOF'
@@ -113,7 +113,7 @@ jobs:
         -DVCPKG_INSTALLED_DIR=${{ github.workspace }}/vcpkg_installed
         -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/registry/ports
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
-        -S brazierORM
+        -S brazier-orm
 
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }}
@@ -185,7 +185,7 @@ jobs:
       run: echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
 
     - name: Create tests config
-      working-directory: brazierORM
+      working-directory: brazier-orm
       run: |
         New-Item -ItemType Directory -Force -Path "tests\config" | Out-Null
         @'
@@ -213,7 +213,7 @@ jobs:
         -DVCPKG_INSTALLED_DIR=${{ github.workspace }}/vcpkg_installed
         -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/registry/ports
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
-        -S brazierORM
+        -S brazier-orm
 
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }}
@@ -297,7 +297,7 @@ jobs:
       run: echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
 
     - name: Create tests config
-      working-directory: brazierORM
+      working-directory: brazier-orm
       run: |
         mkdir -p tests/config
         cat > tests/config/config.hpp <<'EOF'
@@ -325,7 +325,7 @@ jobs:
         -DVCPKG_INSTALLED_DIR=${{ github.workspace }}/vcpkg_installed
         -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/registry/ports
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
-        -S brazierORM
+        -S brazier-orm
 
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }}
